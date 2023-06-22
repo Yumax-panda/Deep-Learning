@@ -4,8 +4,7 @@ import pickle
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from dataset.mnist import load_mnist
-from common.sigmoid import sigmoid
-from common.softmax import softmax
+from common.functions import sigmoid, softmax
 
 DIR = f"{os.getcwd()}\\ch03"
 
