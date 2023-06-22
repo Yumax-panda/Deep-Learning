@@ -31,13 +31,14 @@ def predict(network: dict[str, np.ndarray], x: np.ndarray) -> np.ndarray:
 
 
 if __name__ == "__main__":
+    batch: int = 100
     x, t = get_data()
     network = init_network()
     count = 0
 
-    for i in range(len(x)):
-        y = predict(network, x[i])
-        p = np.argmax(y)
-        count += int(p==t[i])
+    for i in range(0, len(x), batch):
+        y = predict(network, x[i:i+batch])
+        p = np.argmax(y, axis=1)
+        count += np.sum(p==t[i:batch+i])
 
     print(f"Accuracy: {float(count)/len(x):.4f}")
