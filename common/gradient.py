@@ -8,14 +8,34 @@ def func(x: np.ndarray) -> float:
     return np.sum(x**2)
 
 
-def numerical_gradient(f: F, x: np.ndarray) -> np.ndarray:
+def _numerical_gradient_no_batch(f: F, x: np.ndarray) -> np.ndarray:
+    h = 1e-4  # 0.0001
     grad = np.zeros_like(x)
 
     for idx in range(x.size):
-        h = np.zeros_like(x)
-        h[idx] = 1e-4
-        grad[idx] = (f(x+h) - f(x-h))/(2*1e-4)
+        tmp_val = x[idx]
+        x[idx] = float(tmp_val) + h
+        fxh1 = f(x)  # f(x+h)
+
+        x[idx] = tmp_val - h 
+        fxh2 = f(x)  # f(x-h)
+        grad[idx] = (fxh1 - fxh2) / (2*h)
+
+        x[idx] = tmp_val  # 値を元に戻す
+
     return grad
+
+
+def numerical_gradient(f: F, X: np.ndarray) -> np.ndarray:
+    if X.ndim == 1:
+        return _numerical_gradient_no_batch(f, X)
+    else:
+        grad = np.zeros_like(X)
+
+        for idx, x in enumerate(X):
+            grad[idx] = _numerical_gradient_no_batch(f, x)
+
+        return grad
 
 
 def gradient_descent(
