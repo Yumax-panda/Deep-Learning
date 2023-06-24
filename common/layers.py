@@ -15,11 +15,18 @@ class ReLU:
         self.mask = None
 
     def forward(self, x: np.ndarray) -> np.ndarray:
-        self.mask = x > 0
-        return x * self.mask.astype(np.float_)
+        self.mask = (x <= 0)
+        out = x.copy()
+        out[self.mask] = 0
+
+        return out
 
     def backward(self, dout: np.ndarray) -> np.ndarray:
-        return dout * self.mask.astype(np.float_)
+        dout[self.mask] = 0
+        dx = dout
+
+        return dx
+
 
 
 class Sigmoid:
@@ -63,9 +70,12 @@ class Affine:
         return np.dot(x_vector, self.W) + self.b
 
     def backward(self, dout: np.ndarray) -> np.ndarray:
-        self.dW = np.dot(self.x.reshape(*self.original_shape).T, dout)
+        dx = np.dot(dout, self.W.T)
+        self.dW = np.dot(self.x.T, dout)
         self.db = np.sum(dout, axis=0)
-        return np.dot(dout, self.W.T)
+
+        dx = dx.reshape(*self.original_shape)  # 入力データの形状に戻す（テンソル対応）
+        return dx
 
 
 class SoftmaxWithLoss:
@@ -82,13 +92,21 @@ class SoftmaxWithLoss:
 
     def forward(self, x: np.ndarray, t:np.ndarray) -> np.ndarray:
         self.t = t
-        y = softmax(x)
-        self.y = y
-        self.loss = cross_entropy_error(y, t)
-        return y
+        self.y = softmax(x)
+        self.loss = cross_entropy_error(self.y, self.t)
 
-    def backward(self, dout) -> np.ndarray:
-        return (self.y - self.t)/self.t.shape[0]
+        return self.loss
+
+    def backward(self, dout=1):
+        batch_size = self.t.shape[0]
+        if self.t.size == self.y.size: # 教師データがone-hot-vectorの場合
+            dx = (self.y - self.t) / batch_size
+        else:
+            dx = self.y.copy()
+            dx[np.arange(batch_size), self.t] -= 1
+            dx = dx / batch_size
+
+        return dx
 
 
 if __name__ == '__main__':
