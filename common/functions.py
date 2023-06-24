@@ -4,10 +4,9 @@ import matplotlib.pyplot as plt
 def sigmoid(x :np.ndarray) -> np.ndarray:
     return 1/(1+np.exp(-x))
 
-def softmax(a: np.ndarray) -> np.ndarray:
-    c = np.max(a)
-    total = np.sum(np.exp(a-c))
-    return np.exp(a-c)/total
+def softmax(x: np.ndarray) -> np.ndarray:
+    x = x - np.max(x, axis=-1, keepdims=True)   # オーバーフロー対策
+    return np.exp(x) / np.sum(np.exp(x), axis=-1, keepdims=True)
 
 def sum_squared_error(y: np.ndarray, t: np.ndarray):
     return 0.5*np.sum((y-t)**2)
